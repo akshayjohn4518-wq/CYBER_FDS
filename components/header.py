@@ -18,7 +18,7 @@ def render_header(report: ValidationReport, total_records: int):
                         Cyber Threat Intelligence Workspace • V1.1
                     </span>
                     <span style="background: rgba(56, 189, 248, 0.12); color: #38BDF8; font-size: 0.72rem; padding: 0.1rem 0.45rem; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.25);">
-                        CSE-QE-2A
+                        2015 – 2024
                     </span>
                 </div>
                 <h1 style="margin: 0; font-size: 2.1rem; font-weight: 800; background: linear-gradient(135deg, #FFFFFF 0%, #CBD5E1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
@@ -29,9 +29,9 @@ def render_header(report: ValidationReport, total_records: int):
                 </p>
             </div>
             <div style="text-align: right; background: #111827; border: 1px solid #1E293B; border-radius: 10px; padding: 0.6rem 0.9rem;">
-                <div style="font-size: 0.72rem; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em;">Project Owner</div>
-                <div style="font-size: 0.9rem; font-weight: 700; color: #F3F4F6;">REDDY &bull; CSE-QE-2A</div>
-                <div style="font-size: 0.74rem; color: #38BDF8;">Fundamentals of Data Science</div>
+                <div style="font-size: 0.72rem; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em;">Domain</div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: #F3F4F6;">Fundamentals of Data Science</div>
+                <div style="font-size: 0.74rem; color: #38BDF8;">Threat Intelligence Analytics</div>
             </div>
         </div>
         """,

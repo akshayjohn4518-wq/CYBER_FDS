@@ -1,8 +1,7 @@
 """
 Global Cybersecurity Threats Analytics Dashboard (2015–2024)
 Course: Fundamentals of Data Science
-Owner: REDDY — CSE-QE-2A
-Version: 1.1 — Vibe Coding Ready
+Version: 1.1
 """
 import streamlit as st
 
@@ -286,8 +285,8 @@ def main():
     st.markdown(
         """
         <div style="text-align: center; padding: 2rem 0 1rem 0; color: #64748B; font-size: 0.8rem; border-top: 1px solid #1E293B;">
-            <b>Global Cybersecurity Threats Analytics Dashboard</b> &bull; Fundamentals of Data Science Coursework<br>
-            Developed by REDDY (CSE-QE-2A) &bull; Built with Streamlit, Plotly & Pandas &bull; October 2026
+            <b>Global Cybersecurity Threats Analytics Dashboard</b> &bull; Fundamentals of Data Science<br>
+            Built with Streamlit, Plotly & Pandas
         </div>
         """,
         unsafe_allow_html=True

@@ -1,5 +1,5 @@
 # Global Cybersecurity Threats Analytics Dashboard (2015–2024)
-### Course: Fundamentals of Data Science | Owner: REDDY — CSE-QE-2A | Version 1.1
+### Course: Fundamentals of Data Science | Version 1.1
 
 An interactive, dark-mode cybersecurity visual intelligence platform built with **Python**, **Streamlit**, **Pandas**, and **Plotly**. Transforms longitudinal threat data (1,000 incidents from 2015 to 2024 across 10 sovereign nations) into actionable analytical intelligence.
 
