@@ -10,7 +10,7 @@ def render_header(report: ValidationReport, total_records: int):
     """Renders the top application header, badges, caveats expander, and navigation bar."""
     st.markdown(
         """
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div style="margin-bottom: 0.5rem;">
             <div>
                 <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.25rem;">
                     <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #34D399; box-shadow: 0 0 10px #34D399;"></span>
@@ -27,11 +27,6 @@ def render_header(report: ValidationReport, total_records: int):
                 <p style="margin: 0.35rem 0 0 0; color: #9CA3AF; font-size: 0.9rem;">
                     Temporal and categorical intelligence exploration across 1,000 incidents (2015–2024).
                 </p>
-            </div>
-            <div style="text-align: right; background: #111827; border: 1px solid #1E293B; border-radius: 10px; padding: 0.6rem 0.9rem;">
-                <div style="font-size: 0.72rem; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em;">Domain</div>
-                <div style="font-size: 0.9rem; font-weight: 700; color: #F3F4F6;">Fundamentals of Data Science</div>
-                <div style="font-size: 0.74rem; color: #38BDF8;">Threat Intelligence Analytics</div>
             </div>
         </div>
         """,
