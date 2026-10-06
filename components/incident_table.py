@@ -1,11 +1,11 @@
 """
-Incident Explorer Table Component.
-Implements PRD Section 9:
+Obsidian Incident Explorer Table Component.
+Implements Obsidian Threat Intelligence specification:
 - Multi-field text search across categorical dimensions.
-- Column sorting with default order (Country -> Year -> Attack Type).
-- Client-friendly pagination (10, 25, 50, 100 records per page).
-- Full filtered dataset CSV export (all records, not just active page).
-- High-impact records identification without misleading 'live incident' tags.
+- Deterministic column sorting with default order.
+- Compact pagination with monospaced range indicators.
+- CSV telemetry export for both active page and full filtered dataset.
+- Highest-impact incident callout with Obsidian amber left border.
 """
 import math
 import pandas as pd
@@ -17,13 +17,13 @@ def render_incident_explorer(df: pd.DataFrame):
     """Renders the interactive Incident Explorer with search, sort, pagination, and CSV download."""
     st.markdown(
         """
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
             <div>
-                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #F3F4F6;">
-                    🔎 Incident Explorer & Records Inspector
+                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #F2F0EA; letter-spacing: -0.01em;">
+                    INCIDENT EXPLORER & AUDIT LOGS
                 </h3>
-                <p style="margin: 0.2rem 0 0 0; font-size: 0.82rem; color: #9CA3AF;">
-                    Inspect individual records matching the shared filter state. Default sort: Country &rarr; Year &rarr; Attack Type.
+                <p style="margin: 0.2rem 0 0 0; font-size: 0.78rem; color: #9299A5;">
+                    Granular record-level telemetry matching active filter criteria. Default sort: Country &rarr; Year &rarr; Attack Type.
                 </p>
             </div>
         </div>
@@ -35,12 +35,12 @@ def render_incident_explorer(df: pd.DataFrame):
         st.markdown(
             """
             <div class="cyber-empty-card">
-                <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🔍</div>
-                <div style="font-size: 1.1rem; font-weight: 700; color: #F3F4F6; margin-bottom: 0.25rem;">
-                    No incidents match your current filters.
+                <div style="font-size: 1.8rem; margin-bottom: 0.5rem; color: #626A76;">⬡</div>
+                <div style="font-size: 1rem; font-weight: 700; color: #F2F0EA; margin-bottom: 0.25rem;">
+                    No incident records match active filter selection.
                 </div>
-                <div style="font-size: 0.85rem; color: #9CA3AF; margin-bottom: 1.25rem;">
-                    Try widening your filter selections in the sidebar or click Reset All Filters.
+                <div style="font-size: 0.8rem; color: #9299A5; margin-bottom: 1.25rem;">
+                    Broaden filter parameters in the left sidebar navigation rail to restore telemetry.
                 </div>
             </div>
             """,
@@ -53,11 +53,11 @@ def render_incident_explorer(df: pd.DataFrame):
     with t1:
         csv_data = prepare_filtered_csv(df)
         st.download_button(
-            label=f"📥 Export All {len(df):,} Filtered Records (CSV)",
+            label=f"↓ Export Filtered Records ({len(df):,} Rows, CSV)",
             data=csv_data,
             file_name=get_export_filename("cybersecurity_filtered_incidents"),
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
             help="Download the entire filtered dataset currently active across the dashboard."
         )
     with t2:
@@ -65,15 +65,15 @@ def render_incident_explorer(df: pd.DataFrame):
         if not country_summary_df.empty:
             summary_csv = country_summary_df.to_csv(index=False).encode("utf-8")
             st.download_button(
-                label="📊 Export Country Summary Table (CSV)",
+                label="↓ Export Sovereign Summary Aggregate (CSV)",
                 data=summary_csv,
                 file_name=get_export_filename("cybersecurity_country_summary"),
                 mime="text/csv",
-                use_container_width=True,
+                width="stretch",
                 help="Download country-level aggregate summary table."
             )
 
-    st.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 0.4rem;'></div>", unsafe_allow_html=True)
 
     # Search & Controls bar
     col_search, col_sort, col_order, col_page_size = st.columns([3, 2, 1.5, 1.5])
@@ -81,7 +81,7 @@ def render_incident_explorer(df: pd.DataFrame):
     with col_search:
         search_query = st.text_input(
             "Search within filtered records:",
-            placeholder="Type country, attack type, industry, defense...",
+            placeholder="Search country, attack vector, industry, defense...",
             key="table_search_input"
         )
 
@@ -162,9 +162,9 @@ def render_incident_explorer(df: pd.DataFrame):
     # Display range info
     st.markdown(
         f"""
-        <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.5rem 0 0.75rem 0; font-size: 0.82rem; color: #9CA3AF;">
-            <span>Showing records <b>{start_idx + 1 if total_table_rows > 0 else 0}</b> to <b>{end_idx}</b> of <b>{total_table_rows:,}</b> {f'(filtered from {len(df):,})' if search_query else ''}</span>
-            <span style="font-family: 'JetBrains Mono', monospace;">Page {curr_page} of {total_pages}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.4rem 0 0.65rem 0; font-size: 0.76rem; color: #9299A5; font-family: 'IBM Plex Mono', monospace;">
+            <span>RECORDS <b>{start_idx + 1 if total_table_rows > 0 else 0}</b> – <b>{end_idx}</b> OF <b>{total_table_rows:,}</b> {f'(filtered from {len(df):,})' if search_query else ''}</span>
+            <span>PAGE {curr_page} / {total_pages}</span>
         </div>
         """,
         unsafe_allow_html=True
@@ -183,11 +183,12 @@ def render_incident_explorer(df: pd.DataFrame):
         "Financial_Loss_Million_USD": "Loss ($M)",
         "Affected_Users": "Affected Users",
         "Resolution_Time_Hours": "Resolution (hrs)",
-        "Attack_Type": "Attack Type",
+        "Attack_Type": "Attack Vector",
         "Target_Industry": "Target Industry",
         "Attack_Source": "Source",
         "Vulnerability_Type": "Vulnerability",
-        "Defense_Mechanism": "Defense"
+        "Defense_Mechanism": "Defense Architecture",
+        "Severity": "Severity Level"
     })
 
     st.dataframe(
@@ -196,7 +197,7 @@ def render_incident_explorer(df: pd.DataFrame):
             "Affected Users": "{:,}",
             "Resolution (hrs)": "{:,} hrs"
         }),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         height=min(450, 40 + len(page_data) * 36)
     )
@@ -204,7 +205,7 @@ def render_incident_explorer(df: pd.DataFrame):
     # Pagination navigation controls
     c_prev, c_space, c_jump, c_next = st.columns([1.5, 3, 2, 1.5])
     with c_prev:
-        if st.button("⬅️ Previous", disabled=(curr_page <= 1), use_container_width=True):
+        if st.button("← Previous", disabled=(curr_page <= 1), width="stretch"):
             st.session_state.table_current_page -= 1
             st.rerun()
 
@@ -223,19 +224,19 @@ def render_incident_explorer(df: pd.DataFrame):
             st.rerun()
 
     with c_next:
-        if st.button("Next ➡️", disabled=(curr_page >= total_pages), use_container_width=True):
+        if st.button("Next →", disabled=(curr_page >= total_pages), width="stretch"):
             st.session_state.table_current_page += 1
             st.rerun()
 
-    # Highest impact record callout (PRD Section 3.5: "Highest-impact records in the selected dataset")
+    # Highest impact record callout
     if not df.empty:
         highest_impact = df.sort_values("Financial_Loss_Million_USD", ascending=False).iloc[0]
         st.markdown(
             f"""
-            <div style="background: #111827; border: 1px solid #1E293B; border-left: 4px solid #38BDF8; border-radius: 8px; padding: 0.75rem 1rem; margin-top: 1.5rem; font-size: 0.84rem;">
-                <span style="font-weight: 700; color: #38BDF8;">Highest-Impact Record in Selected Dataset:</span>
-                <span style="color: #F3F4F6;">
-                    <b>{highest_impact['Country']}</b> ({highest_impact['Year']}) suffered a <b>${highest_impact['Financial_Loss_Million_USD']:,.2f} Million</b> loss from a <b>{highest_impact['Attack_Type']}</b> attack targeting the <b>{highest_impact['Target_Industry']}</b> industry ({highest_impact['Affected_Users']:,} affected users, resolved in {highest_impact['Resolution_Time_Hours']} hours via {highest_impact['Defense_Mechanism']}).
+            <div style="background: #141922; border: 1px solid #252C36; border-left: 3px solid #E8A83E; border-radius: 6px; padding: 0.75rem 1rem; margin-top: 1.25rem; font-size: 0.8rem; line-height: 1.45;">
+                <span style="font-weight: 700; color: #E8A83E; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; font-size: 0.74rem;">PEAK EXPOSURE RECORD // </span>
+                <span style="color: #F2F0EA;">
+                    <b>{highest_impact['Country']}</b> ({highest_impact['Year']}) logged maximum exposure of <b>${highest_impact['Financial_Loss_Million_USD']:,.2f} Million</b> from <b>{highest_impact['Attack_Type']}</b> targeting <b>{highest_impact['Target_Industry']}</b> ({highest_impact['Affected_Users']:,} affected users, resolved in {highest_impact['Resolution_Time_Hours']} hours via {highest_impact['Defense_Mechanism']}).
                 </span>
             </div>
             """,

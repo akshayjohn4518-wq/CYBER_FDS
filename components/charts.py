@@ -1,7 +1,10 @@
 """
-Plotly Chart Engine for Global Cybersecurity Threats Dashboard.
-Implements all 11 visualizations required by PRD Section 8 with consistent
-dark cyber styling, hover tooltips, sample counts, units, and view-data toggles.
+Obsidian Plotly Chart Engine for Global Cybersecurity Threats Dashboard.
+Benchmark: Enterprise Threat Intelligence (Palantir, Bloomberg, modern SOC).
+Design Language: Quiet intelligence. High signal. Zero visual noise.
+- Dark graphite canvas #141922 with #1C222B gridlines.
+- Signal Amber #E8A83E, Steel Blue #6D8FB8, Critical Red #D95C5C, Controlled Green #55B88A.
+- Typography: Inter body + IBM Plex Mono metrics and ticks.
 """
 from typing import Optional
 import numpy as np
@@ -11,65 +14,82 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
 
-from components.styles import ATTACK_COLOR_MAP, THEME_COLORS
+from components.styles import ATTACK_COLOR_MAP, THEME_COLORS, SEVERITY_COLOR_MAP
 
 
-def cyber_chart_layout(
+def obsidian_chart_layout(
     fig: go.Figure,
-    height: int = 420,
+    height: int = 400,
     show_legend: bool = True,
     legend_title: str = "",
     hovermode: Optional[str] = "closest"
 ) -> go.Figure:
-    """Applies a consistent, polished cyber dark theme to any Plotly figure."""
+    """Applies the Obsidian Threat Intelligence theme to any Plotly figure."""
     fig.update_layout(
         autosize=True,
         height=height,
-        paper_bgcolor="rgba(17, 24, 39, 0.6)",
-        plot_bgcolor="rgba(17, 24, 39, 0.4)",
-        font=dict(family="'Plus Jakarta Sans', sans-serif", color="#CBD5E1", size=12),
-        margin=dict(l=45, r=25, t=55, b=45),
+        paper_bgcolor="#141922",
+        plot_bgcolor="#141922",
+        font=dict(family="'Inter', sans-serif", color="#F2F0EA", size=11),
+        margin=dict(l=45, r=25, t=45, b=45),
         hovermode=hovermode,
         showlegend=show_legend,
+        hoverlabel=dict(
+            bgcolor="#1A202B",
+            bordercolor="#252C36",
+            font=dict(family="'IBM Plex Mono', monospace", size=11, color="#F2F0EA")
+        ),
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=1.02,
+            y=1.03,
             xanchor="center",
             x=0.5,
             title_text=legend_title,
-            font=dict(size=11, color="#9CA3AF"),
-            bgcolor="rgba(17, 24, 39, 0.8)",
-            bordercolor="#263244",
+            font=dict(size=11, color="#9299A5", family="'Inter', sans-serif"),
+            bgcolor="rgba(20, 25, 34, 0.9)",
+            bordercolor="#252C36",
             borderwidth=1,
         ),
     )
     fig.update_xaxes(
-        gridcolor="#1E293B",
-        linecolor="#263244",
-        zerolinecolor="#263244",
-        tickfont=dict(color="#9CA3AF", size=11),
-        title_font=dict(color="#CBD5E1", size=12),
+        gridcolor="#1C222B",
+        linecolor="#252C36",
+        zerolinecolor="#252C36",
+        tickfont=dict(color="#9299A5", size=10, family="'IBM Plex Mono', monospace"),
+        title_font=dict(color="#9299A5", size=11, family="'Inter', sans-serif"),
         automargin=True
     )
     fig.update_yaxes(
-        gridcolor="#1E293B",
-        linecolor="#263244",
-        zerolinecolor="#263244",
-        tickfont=dict(color="#9CA3AF", size=11),
-        title_font=dict(color="#CBD5E1", size=12),
+        gridcolor="#1C222B",
+        linecolor="#252C36",
+        zerolinecolor="#252C36",
+        tickfont=dict(color="#9299A5", size=10, family="'IBM Plex Mono', monospace"),
+        title_font=dict(color="#9299A5", size=11, family="'Inter', sans-serif"),
         automargin=True
     )
     return fig
 
 
+def plot_chart(fig: go.Figure, **kwargs):
+    """Safely renders Plotly figure with modern stretch width."""
+    try:
+        st.plotly_chart(fig, width="stretch", **kwargs)
+    except TypeError:
+        st.plotly_chart(fig, use_container_width=True, **kwargs)
+
+
+# Backward compatibility alias
+cyber_chart_layout = obsidian_chart_layout
+
+
 def render_chart_header(title: str, subtitle: str, sample_count: int, chart_id: str):
-    """Renders standardized title bar with sample size badge."""
+    """Renders standardized Obsidian title bar with sample size badge."""
     st.markdown(
         f"""
         <div class="chart-header">
             <div>
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #38BDF8; margin-right: 0.4rem;">{chart_id}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: #E8A83E; margin-right: 0.45rem; font-weight: 600;">{chart_id}</span>
                 <span class="chart-title">{title}</span>
             </div>
             <span class="chart-sample-badge">n = {sample_count:,}</span>
@@ -83,7 +103,7 @@ def render_chart_header(title: str, subtitle: str, sample_count: int, chart_id: 
 def render_empty_chart(title: str, chart_id: str):
     """Graceful placeholder when current filter produces 0 matching records."""
     render_chart_header(title, "No records match current filter criteria.", 0, chart_id)
-    st.info("⚠️ No data available to render this visualization with the current filter selection.")
+    st.info("⚠️ No records match current filter criteria.")
 
 
 # -----------------------------------------------------------------------------
@@ -109,13 +129,19 @@ def render_chart_01(df: pd.DataFrame):
         Avg_Loss=("Financial_Loss_Million_USD", "mean")
     ).sort_values("Total_Loss", ascending=True)
 
+    obsidian_amber_scale = [
+        [0.0, "#1A202B"],
+        [0.5, "#B8832D"],
+        [1.0, "#E8A83E"]
+    ]
+
     fig = px.bar(
         grouped,
         x="Total_Loss",
         y="Country",
         orientation="h",
         color="Total_Loss",
-        color_continuous_scale="Tealgrn",
+        color_continuous_scale=obsidian_amber_scale,
         text_auto=",.1f",
         labels={"Total_Loss": "Total Loss (Million USD)", "Country": "Country"},
         custom_data=["Incidents", "Avg_Loss"]
@@ -123,14 +149,15 @@ def render_chart_01(df: pd.DataFrame):
     fig.update_traces(
         hovertemplate="<b>%{y}</b><br>Total Loss: $%{x:,.2f} M<br>Incidents: %{customdata[0]:,}<br>Mean Loss: $%{customdata[1]:.2f} M<extra></extra>",
         textposition="outside",
+        textfont=dict(family="'IBM Plex Mono', monospace", size=10, color="#F2F0EA"),
         cliponaxis=False,
     )
     fig.update_coloraxes(showscale=False)
-    cyber_chart_layout(fig, height=380, show_legend=False)
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True, "toImageButtonOptions": {"format": "png"}})
+    obsidian_chart_layout(fig, height=380, show_legend=False)
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Underlying Data — Chart 01"):
-        st.dataframe(grouped.sort_values("Total_Loss", ascending=False).reset_index(drop=True), use_container_width=True)
+        st.dataframe(grouped.sort_values("Total_Loss", ascending=False).reset_index(drop=True), use_container_width=True if not hasattr(st, "html") else None, width="stretch")
 
 
 # -----------------------------------------------------------------------------
@@ -144,8 +171,8 @@ def render_chart_02(df: pd.DataFrame):
 
     n = len(df)
     render_chart_header(
-        "Yearly Incident & Loss Dynamics (2015–2024)",
-        "Temporal comparison of incident frequency (left) versus cumulative loss in $M (right).",
+        "Incidents & Financial Loss over Time",
+        "Longitudinal comparison of incident frequency (amber, left) versus total loss in $M (steel blue, right).",
         n,
         "CHART 02"
     )
@@ -157,43 +184,47 @@ def render_chart_02(df: pd.DataFrame):
     ).sort_values("Year")
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
+    # Incident count: Signal Amber with restrained fill
     fig.add_trace(
         go.Scatter(
             x=yearly["Year"],
             y=yearly["Incidents"],
             name="Incident Count",
             mode="lines+markers",
-            line=dict(color="#38BDF8", width=3),
-            marker=dict(size=8, symbol="circle"),
+            line=dict(color="#E8A83E", width=2.5),
+            marker=dict(size=6, symbol="circle", color="#E8A83E"),
+            fill="tozeroy",
+            fillcolor="rgba(232, 168, 62, 0.06)",
             hovertemplate="Year %{x}<br>Incidents: %{y:,}<extra></extra>"
         ),
         secondary_y=False
     )
+    # Total loss: Steel Blue dashed
     fig.add_trace(
         go.Scatter(
             x=yearly["Year"],
             y=yearly["Total_Loss"],
             name="Total Loss ($M)",
             mode="lines+markers",
-            line=dict(color="#F87171", width=3, dash="dot"),
-            marker=dict(size=8, symbol="diamond"),
+            line=dict(color="#6D8FB8", width=2, dash="dot"),
+            marker=dict(size=6, symbol="diamond", color="#6D8FB8"),
             hovertemplate="Year %{x}<br>Total Loss: $%{y:,.1f} M<extra></extra>"
         ),
         secondary_y=True
     )
 
     fig.update_xaxes(title_text="Year", dtick=1)
-    fig.update_yaxes(title_text="Number of Incidents", secondary_y=False, title_font_color="#38BDF8")
-    fig.update_yaxes(title_text="Total Loss ($M)", secondary_y=True, title_font_color="#F87171", showgrid=False)
-    cyber_chart_layout(fig, height=380, show_legend=True, hovermode="x unified")
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True})
+    fig.update_yaxes(title_text="Incident Count", secondary_y=False, title_font_color="#E8A83E")
+    fig.update_yaxes(title_text="Total Loss ($M)", secondary_y=True, title_font_color="#6D8FB8", showgrid=False)
+    obsidian_chart_layout(fig, height=380, show_legend=True, hovermode="x unified")
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Underlying Data — Chart 02"):
-        st.dataframe(yearly.reset_index(drop=True), use_container_width=True)
+        st.dataframe(yearly.reset_index(drop=True), use_container_width=True if not hasattr(st, "html") else None, width="stretch")
 
 
 # -----------------------------------------------------------------------------
-# CHART 03: Distribution Analysis (Histogram + Marginal Box Plot)
+# CHART 03: Distribution Analysis (Histogram + Box Plot)
 # -----------------------------------------------------------------------------
 def render_chart_03(df: pd.DataFrame):
     """Chart 03: Toggleable distribution analysis between Loss and Resolution Time."""
@@ -219,12 +250,12 @@ def render_chart_03(df: pd.DataFrame):
     if var_choice.startswith("Financial"):
         col_name = "Financial_Loss_Million_USD"
         label_name = "Financial Loss (Million USD)"
-        color_seq = ["#38BDF8"]
+        color_seq = ["#E8A83E"]
         unit_str = "$M"
     else:
         col_name = "Resolution_Time_Hours"
         label_name = "Resolution Time (Hours)"
-        color_seq = ["#34D399"]
+        color_seq = ["#6D8FB8"]
         unit_str = "hrs"
 
     mean_val = df[col_name].mean()
@@ -242,27 +273,27 @@ def render_chart_03(df: pd.DataFrame):
     fig.add_vline(
         x=mean_val,
         line_dash="dash",
-        line_color="#F87171",
+        line_color="#D95C5C",
         annotation_text=f"Mean: {mean_val:.1f} {unit_str}",
         annotation_position="top right",
-        annotation_font=dict(color="#F87171", size=11)
+        annotation_font=dict(color="#D95C5C", size=10, family="'IBM Plex Mono', monospace")
     )
     fig.add_vline(
         x=median_val,
         line_dash="dot",
-        line_color="#FBBF24",
+        line_color="#E8A83E",
         annotation_text=f"Median: {median_val:.1f} {unit_str}",
         annotation_position="bottom right",
-        annotation_font=dict(color="#FBBF24", size=11)
+        annotation_font=dict(color="#E8A83E", size=10, family="'IBM Plex Mono', monospace")
     )
     fig.update_traces(
-        marker_line_color="#080B12",
+        marker_line_color="#141922",
         marker_line_width=1,
         selector=dict(type="histogram")
     )
     fig.update_yaxes(title_text="Incident Count", row=1, col=1)
-    cyber_chart_layout(fig, height=400, show_legend=False)
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True})
+    obsidian_chart_layout(fig, height=390, show_legend=False)
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Summary Statistics — Chart 03"):
         st.write(df[[col_name]].describe().T)
@@ -288,13 +319,11 @@ def render_chart_04(df: pd.DataFrame):
     counts = df["Attack_Type"].value_counts().reset_index()
     counts.columns = ["Attack_Type", "Count"]
 
-    color_seq = [ATTACK_COLOR_MAP.get(a, "#38BDF8") for a in counts["Attack_Type"]]
-
     fig = px.pie(
         counts,
         names="Attack_Type",
         values="Count",
-        hole=0.45,
+        hole=0.55,
         color="Attack_Type",
         color_discrete_map=ATTACK_COLOR_MAP
     )
@@ -302,14 +331,22 @@ def render_chart_04(df: pd.DataFrame):
         textinfo="percent+label",
         textposition="inside",
         insidetextorientation="radial",
-        marker=dict(line=dict(color="#111827", width=2)),
+        textfont=dict(family="'Inter', sans-serif", size=11),
+        marker=dict(line=dict(color="#141922", width=2)),
         hovertemplate="<b>%{label}</b><br>Incidents: %{value:,}<br>Share: %{percent}<extra></extra>"
     )
-    cyber_chart_layout(fig, height=380, show_legend=True)
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True})
+    fig.add_annotation(
+        text=f"<b>{n:,}</b><br><span style='font-size:10px;color:#9299A5;font-family:Inter;'>INCIDENTS</span>",
+        x=0.5,
+        y=0.5,
+        showarrow=False,
+        font=dict(size=16, color="#F2F0EA", family="'IBM Plex Mono', monospace")
+    )
+    obsidian_chart_layout(fig, height=380, show_legend=True)
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Underlying Data — Chart 04"):
-        st.dataframe(counts, use_container_width=True)
+        st.dataframe(counts, use_container_width=True if not hasattr(st, "html") else None, width="stretch")
 
 
 # -----------------------------------------------------------------------------
@@ -337,7 +374,7 @@ def render_chart_05(df: pd.DataFrame):
         y="Financial_Loss_Million_USD",
         color="Attack_Type",
         color_discrete_map=ATTACK_COLOR_MAP,
-        opacity=0.72,
+        opacity=0.75,
         log_x=use_log,
         hover_data={
             "Country": True,
@@ -352,9 +389,9 @@ def render_chart_05(df: pd.DataFrame):
             "Attack_Type": "Attack Type"
         }
     )
-    fig.update_traces(marker=dict(size=8, line=dict(width=0.8, color="#080B12")))
-    cyber_chart_layout(fig, height=450, show_legend=True)
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True})
+    fig.update_traces(marker=dict(size=7, line=dict(width=0.6, color="#141922")))
+    obsidian_chart_layout(fig, height=440, show_legend=True)
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Correlation Analysis — Chart 05"):
         corr = df["Affected_Users"].corr(df["Financial_Loss_Million_USD"])
@@ -378,7 +415,6 @@ def render_chart_06(df: pd.DataFrame):
         "CHART 06"
     )
 
-    # Sort industries by median loss descending
     order = (
         df.groupby("Target_Industry")["Financial_Loss_Million_USD"]
         .median()
@@ -386,22 +422,24 @@ def render_chart_06(df: pd.DataFrame):
         .index.tolist()
     )
 
+    obsidian_palette = ["#E8A83E", "#6D8FB8", "#55B88A", "#D95C5C", "#8E82A6", "#D4883A", "#9299A5"]
+
     fig = px.box(
         df,
         x="Target_Industry",
         y="Financial_Loss_Million_USD",
         color="Target_Industry",
         category_orders={"Target_Industry": order},
-        color_discrete_sequence=px.colors.qualitative.Dark24,
+        color_discrete_sequence=obsidian_palette,
         labels={"Target_Industry": "Industry", "Financial_Loss_Million_USD": "Loss ($M)"},
     )
-    fig.update_traces(boxpoints="all", jitter=0.3, pointpos=-1.8, marker=dict(size=4, opacity=0.5))
-    cyber_chart_layout(fig, height=420, show_legend=False)
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True})
+    fig.update_traces(boxpoints="all", jitter=0.3, pointpos=-1.8, marker=dict(size=4, opacity=0.45))
+    obsidian_chart_layout(fig, height=400, show_legend=False)
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Industry Median Loss Stats — Chart 06"):
         ind_stats = df.groupby("Target_Industry")["Financial_Loss_Million_USD"].agg(["count", "mean", "median", "std"]).sort_values("median", ascending=False)
-        st.dataframe(ind_stats.round(2), use_container_width=True)
+        st.dataframe(ind_stats.round(2), use_container_width=True if not hasattr(st, "html") else None, width="stretch")
 
 
 # -----------------------------------------------------------------------------
@@ -428,19 +466,26 @@ def render_chart_07(df: pd.DataFrame):
         aggfunc="mean"
     )
 
+    obsidian_heatmap_scale = [
+        [0.0, "#141922"],
+        [0.4, "#273244"],
+        [0.75, "#B8832D"],
+        [1.0, "#E8A83E"]
+    ]
+
     fig = px.imshow(
         pivot,
         text_auto=".0f",
-        color_continuous_scale="Viridis",
+        color_continuous_scale=obsidian_heatmap_scale,
         aspect="auto",
         labels={"x": "Country", "y": "Attack Type", "color": "Avg Loss ($M)"}
     )
     fig.update_xaxes(side="bottom")
-    cyber_chart_layout(fig, height=440, show_legend=False)
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True})
+    obsidian_chart_layout(fig, height=420, show_legend=False)
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Underlying Cross-Tab Matrix — Chart 07"):
-        st.dataframe(pivot.round(2), use_container_width=True)
+        st.dataframe(pivot.round(2), use_container_width=True if not hasattr(st, "html") else None, width="stretch")
 
 
 # -----------------------------------------------------------------------------
@@ -465,24 +510,31 @@ def render_chart_08(df: pd.DataFrame):
         Incident_Count=("Incident_No", "count")
     )
 
+    obsidian_actor_colors = {
+        "Nation-state": "#D95C5C",
+        "Hacker Group": "#E8A83E",
+        "Insider": "#D4883A",
+        "Unknown": "#6D8FB8"
+    }
+
     fig = px.bar(
         grouped,
         x="Target_Industry",
         y="Avg_Loss",
         color="Attack_Source",
         barmode="group",
-        color_discrete_sequence=["#38BDF8", "#F87171", "#FBBF24", "#34D399"],
+        color_discrete_map=obsidian_actor_colors,
         labels={"Target_Industry": "Target Industry", "Avg_Loss": "Average Loss ($M)", "Attack_Source": "Source"},
         custom_data=["Incident_Count"]
     )
     fig.update_traces(
         hovertemplate="<b>%{x}</b> (%{data.name})<br>Avg Loss: $%{y:.2f} M<br>Incidents: %{customdata[0]:,}<extra></extra>"
     )
-    cyber_chart_layout(fig, height=420, show_legend=True)
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True})
+    obsidian_chart_layout(fig, height=410, show_legend=True)
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Grouped Breakdown — Chart 08"):
-        st.dataframe(grouped.round(2), use_container_width=True)
+        st.dataframe(grouped.round(2), use_container_width=True if not hasattr(st, "html") else None, width="stretch")
 
 
 # -----------------------------------------------------------------------------
@@ -497,7 +549,7 @@ def render_chart_09(df: pd.DataFrame):
     n = len(df)
     render_chart_header(
         "Defense Mechanism Deployment Frequency",
-        "Recorded defense mechanisms across incidents (Note: frequency reflects deployment, not standalone efficacy).",
+        "Recorded defense mechanisms across incidents (frequency reflects deployment, not standalone efficacy).",
         n,
         "CHART 09"
     )
@@ -505,31 +557,34 @@ def render_chart_09(df: pd.DataFrame):
     counts = df["Defense_Mechanism"].value_counts().reset_index()
     counts.columns = ["Defense_Mechanism", "Count"]
 
+    obsidian_def_palette = ["#E8A83E", "#6D8FB8", "#55B88A", "#8E82A6", "#D4883A"]
+
     fig = px.pie(
         counts,
         names="Defense_Mechanism",
         values="Count",
         hole=0.55,
-        color_discrete_sequence=["#38BDF8", "#818CF8", "#34D399", "#FBBF24", "#F472B6"]
+        color_discrete_sequence=obsidian_def_palette
     )
     fig.update_traces(
         textinfo="percent+label",
         textposition="outside",
-        marker=dict(line=dict(color="#111827", width=2)),
+        textfont=dict(family="'Inter', sans-serif", size=10, color="#9299A5"),
+        marker=dict(line=dict(color="#141922", width=2)),
         hovertemplate="<b>%{label}</b><br>Incidents: %{value:,}<br>Share: %{percent}<extra></extra>"
     )
     fig.add_annotation(
-        text=f"<b>{n:,}</b><br><span style='font-size:11px;color:#9CA3AF;'>incidents</span>",
+        text=f"<b>{n:,}</b><br><span style='font-size:10px;color:#9299A5;font-family:Inter;'>DEPLOYED</span>",
         x=0.5,
         y=0.5,
         showarrow=False,
-        font=dict(size=18, color="#F3F4F6")
+        font=dict(size=16, color="#F2F0EA", family="'IBM Plex Mono', monospace")
     )
-    cyber_chart_layout(fig, height=400, show_legend=False)
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True})
+    obsidian_chart_layout(fig, height=390, show_legend=False)
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Defense Mechanism Stats — Chart 09"):
-        st.dataframe(counts, use_container_width=True)
+        st.dataframe(counts, use_container_width=True if not hasattr(st, "html") else None, width="stretch")
 
 
 # -----------------------------------------------------------------------------
@@ -560,12 +615,12 @@ def render_chart_10(df: pd.DataFrame):
         labels={"Year": "Year", "Incidents": "Incidents", "Attack_Type": "Attack Vector"}
     )
     fig.update_xaxes(dtick=1)
-    cyber_chart_layout(fig, height=420, show_legend=True, hovermode="x unified")
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True})
+    obsidian_chart_layout(fig, height=410, show_legend=True, hovermode="x unified")
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Composition Matrix — Chart 10"):
         comp_pivot = area_df.pivot_table(index="Year", columns="Attack_Type", values="Incidents", fill_value=0)
-        st.dataframe(comp_pivot, use_container_width=True)
+        st.dataframe(comp_pivot, use_container_width=True if not hasattr(st, "html") else None, width="stretch")
 
 
 # -----------------------------------------------------------------------------
@@ -579,8 +634,8 @@ def render_chart_11(df: pd.DataFrame):
 
     n = len(df)
     render_chart_header(
-        "Geographic Financial Impact (Choropleth Map)",
-        "Global distribution of economic damage ($M) across the 10 covered sovereign nations.",
+        "GLOBAL THREAT MAP",
+        "Geographical distribution of economic impact ($M) across the 10 sovereign nations.",
         n,
         "CHART 11"
     )
@@ -591,6 +646,13 @@ def render_chart_11(df: pd.DataFrame):
         Avg_Loss=("Financial_Loss_Million_USD", "mean"),
         Avg_Resolution=("Resolution_Time_Hours", "mean")
     )
+
+    obsidian_geo_scale = [
+        [0.0, "#1A202B"],
+        [0.4, "#3D485C"],
+        [0.75, "#E8A83E"],
+        [1.0, "#D95C5C"]
+    ]
 
     fig = px.choropleth(
         country_geo,
@@ -604,33 +666,33 @@ def render_chart_11(df: pd.DataFrame):
             "Avg_Loss": ":.2f",
             "Avg_Resolution": ":.1f"
         },
-        color_continuous_scale="Reds",
+        color_continuous_scale=obsidian_geo_scale,
         projection="natural earth",
         labels={"Total_Loss": "Total Loss ($M)"}
     )
     fig.update_geos(
         showcountries=True,
-        countrycolor="#334155",
-        coastlinecolor="#334155",
+        countrycolor="#252C36",
+        coastlinecolor="#252C36",
         showland=True,
-        landcolor="#111827",
+        landcolor="#141922",
         showocean=True,
-        oceancolor="#080B12",
+        oceancolor="#080A0D",
         showframe=False
     )
     fig.update_layout(
         geo=dict(bgcolor="rgba(0,0,0,0)"),
         coloraxis_colorbar=dict(
-            title=dict(text="Loss ($M)", font=dict(color="#9CA3AF", size=11)),
-            tickfont=dict(color="#9CA3AF", size=10),
-            bgcolor="rgba(17, 24, 39, 0.8)",
-            bordercolor="#263244",
+            title=dict(text="Loss ($M)", font=dict(color="#9299A5", size=10, family="'Inter', sans-serif")),
+            tickfont=dict(color="#9299A5", size=10, family="'IBM Plex Mono', monospace"),
+            bgcolor="rgba(20, 25, 34, 0.9)",
+            bordercolor="#252C36",
             borderwidth=1,
             len=0.75
         )
     )
-    cyber_chart_layout(fig, height=520, show_legend=False)
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True})
+    obsidian_chart_layout(fig, height=500, show_legend=False)
+    plot_chart(fig, config={"displayModeBar": False})
 
     with st.expander("🔍 View Country Geographical Data — Chart 11"):
-        st.dataframe(country_geo.sort_values("Total_Loss", ascending=False).reset_index(drop=True), use_container_width=True)
+        st.dataframe(country_geo.sort_values("Total_Loss", ascending=False).reset_index(drop=True), use_container_width=True if not hasattr(st, "html") else None, width="stretch")

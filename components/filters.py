@@ -1,10 +1,10 @@
 """
-Centralized Global Filtering System (F1 - F11).
-Implements PRD Section 6:
-- Single shared filter engine powering all KPIs, charts, tables, and exports.
-- Multi-select OR logic within dimension; AND logic across dimensions.
-- Reset restores the full baseline dataset.
-- Exposes active filter chips and badges.
+Obsidian Centralized Global Filtering System (F1 - F11).
+Implements Obsidian Threat Intelligence specification:
+- Sidebar header: OBSIDIAN THREAT INTELLIGENCE with geometric security mark.
+- Navigation rail with subtle amber indicators.
+- All 11 global analytical filters preserved with unified cross-filtering logic.
+- Compact filter chips with monospaced telemetry counts.
 """
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -69,18 +69,69 @@ def reset_filters(df: pd.DataFrame):
 
 def render_sidebar_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, FilterState]:
     """
-    Renders the persistent left sidebar with all 11 global filters.
+    Renders the Obsidian navigation sidebar and analytical filter engine.
     Applies unified filtering logic and returns (filtered_df, filter_state).
     """
     init_session_state(df)
 
+    # 1. Sidebar Brand Header
     st.sidebar.markdown(
         """
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-            <div style="font-size: 1.05rem; font-weight: 800; color: #F3F4F6; letter-spacing: -0.02em;">
-                GLOBAL FILTERS
+        <div style="padding-bottom: 0.85rem; border-bottom: 1px solid #1C222B; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.2rem;">
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: #141922; border: 1px solid #E8A83E; border-radius: 4px; color: #E8A83E; font-size: 0.75rem; font-weight: 800;">⬡</span>
+                <span style="font-family: 'Inter', sans-serif; font-size: 0.92rem; font-weight: 800; letter-spacing: 0.08em; color: #F2F0EA; text-transform: uppercase;">
+                    OBSIDIAN
+                </span>
             </div>
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #38BDF8; background: rgba(56, 189, 248, 0.1); padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.25);">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: #9299A5; letter-spacing: 0.06em; text-transform: uppercase;">
+                THREAT INTELLIGENCE
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # 2. Workspace Navigation Rail
+    st.sidebar.markdown(
+        """
+        <div style="margin-bottom: 1.15rem;">
+            <div style="font-size: 0.68rem; font-weight: 700; color: #626A76; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; font-family: 'IBM Plex Mono', monospace;">
+                GLOBAL VIEW
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.78rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; background: #141922; border-left: 2px solid #E8A83E; border-radius: 0 4px 4px 0; color: #F2F0EA; font-weight: 600;">
+                    <span style="color: #E8A83E; font-size: 0.7rem;">●</span> 01 Executive Overview
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; color: #9299A5;">
+                    <span style="color: #626A76; font-size: 0.7rem;">○</span> 02 Geography & Time
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; color: #9299A5;">
+                    <span style="color: #626A76; font-size: 0.7rem;">○</span> 03 Attack & Industry
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; color: #9299A5;">
+                    <span style="color: #626A76; font-size: 0.7rem;">○</span> 04 Financial Impact
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; color: #9299A5;">
+                    <span style="color: #626A76; font-size: 0.7rem;">○</span> 05 Defense Dynamics
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; color: #9299A5;">
+                    <span style="color: #626A76; font-size: 0.7rem;">○</span> 06 Incident Explorer
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # 3. Filters Section Header & Reset Action
+    st.sidebar.markdown(
+        """
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; padding-top: 0.75rem; border-top: 1px solid #1C222B;">
+            <div style="font-size: 0.72rem; font-weight: 700; color: #626A76; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'IBM Plex Mono', monospace;">
+                ANALYTICAL FILTERS
+            </div>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: #E8A83E; background: rgba(232, 168, 62, 0.08); padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid rgba(232, 168, 62, 0.2);">
                 F1 – F11
             </span>
         </div>
@@ -88,14 +139,15 @@ def render_sidebar_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, FilterState]
         unsafe_allow_html=True
     )
 
-    if st.sidebar.button("🔄 Reset All Filters", use_container_width=True, help="Restores full 1,000 incident dataset"):
+    if st.sidebar.button("↺ Reset All Filters", width="stretch", help="Restores full 1,000 incident dataset"):
         reset_filters(df)
         st.rerun()
 
-    st.sidebar.markdown("<hr style='border: none; border-top: 1px solid #1E293B; margin: 0.75rem 0;'>", unsafe_allow_html=True)
+    st.sidebar.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
 
-    # 1. Geographic & Temporal
-    with st.sidebar.expander("🌍 Geography & Time (F1, F2)", expanded=True):
+    # 4. Filter Groups (F1 - F11)
+    # Group 1: Geography & Time
+    with st.sidebar.expander("📍 Geography & Time (F1, F2)", expanded=True):
         all_countries = sorted(df["Country"].unique().tolist())
         countries = st.multiselect(
             "F1. Country",
@@ -113,8 +165,8 @@ def render_sidebar_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, FilterState]
             key="f_year_range"
         )
 
-    # 2. Threat Vector & Target
-    with st.sidebar.expander("🛡️ Attack & Industry (F3, F4, F5)", expanded=True):
+    # Group 2: Threat Vector & Target
+    with st.sidebar.expander("⚔️ Attack & Industry (F3, F4, F5)", expanded=True):
         all_attacks = sorted(df["Attack_Type"].unique().tolist())
         attack_types = st.multiselect(
             "F3. Attack Type",
@@ -139,8 +191,8 @@ def render_sidebar_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, FilterState]
             placeholder="All Attack Sources"
         )
 
-    # 3. Vulnerability & Defense
-    with st.sidebar.expander("🔐 Security & Defense (F6, F7, F8)", expanded=False):
+    # Group 3: Vulnerability & Defense
+    with st.sidebar.expander("🛡️ Security & Defense (F6, F7, F8)", expanded=False):
         all_vulns = sorted(df["Vulnerability_Type"].unique().tolist())
         vulnerabilities = st.multiselect(
             "F6. Security Vulnerability",
@@ -164,8 +216,8 @@ def render_sidebar_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, FilterState]
             placeholder="All Severities"
         )
 
-    # 4. Impact & Duration
-    with st.sidebar.expander("💰 Quantitative Impact (F9, F10, F11)", expanded=False):
+    # Group 4: Quantitative Impact
+    with st.sidebar.expander("📊 Quantitative Impact (F9, F10, F11)", expanded=False):
         min_loss = float(df["Financial_Loss_Million_USD"].min())
         max_loss = float(df["Financial_Loss_Million_USD"].max())
         loss_range = st.slider(
@@ -211,7 +263,7 @@ def render_sidebar_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, FilterState]
         users_range=users_range
     )
 
-    # Apply unified filtering logic (AND between filters, OR inside multi-select)
+    # Apply unified filtering logic (AND between dimensions, OR inside multiselects)
     filtered = df.copy()
 
     if countries:
@@ -246,13 +298,16 @@ def render_sidebar_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, FilterState]
             (filtered["Affected_Users"] <= users_range[1])
         ]
 
-    # Quick summary in sidebar
+    # Active Result Set Telemetry Widget in Sidebar
     st.sidebar.markdown(
         f"""
-        <div style="background: #111827; border: 1px solid #1E293B; border-radius: 8px; padding: 0.6rem 0.8rem; margin-top: 1rem;">
-            <div style="font-size: 0.72rem; color: #9CA3AF; text-transform: uppercase;">Active Result Set</div>
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 700; color: #38BDF8;">
-                {len(filtered):,} <span style="font-size: 0.75rem; color: #6B7280;">/ {len(df):,} ({len(filtered)/len(df)*100:.1f}%)</span>
+        <div style="background: #141922; border: 1px solid #252C36; border-radius: 6px; padding: 0.65rem 0.8rem; margin-top: 1.15rem;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.2rem;">
+                <span style="font-size: 0.68rem; color: #9299A5; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace;">ACTIVE COHORT</span>
+                <span style="font-size: 0.68rem; color: #55B88A; font-family: 'IBM Plex Mono', monospace;">{len(filtered)/len(df)*100:.1f}%</span>
+            </div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 1.15rem; font-weight: 700; color: #F2F0EA;">
+                {len(filtered):,} <span style="font-size: 0.72rem; color: #626A76; font-weight: 400;">/ {len(df):,} incidents</span>
             </div>
         </div>
         """,
@@ -263,7 +318,7 @@ def render_sidebar_filters(df: pd.DataFrame) -> Tuple[pd.DataFrame, FilterState]
 
 
 def render_active_filter_chips(filter_state: FilterState, total_matched: int, total_full: int):
-    """Renders visual chips for every active non-default filter."""
+    """Renders visual telemetry chips for all active non-default filters."""
     active_chips = []
 
     if filter_state.countries:
@@ -283,14 +338,16 @@ def render_active_filter_chips(filter_state: FilterState, total_matched: int, to
     if filter_state.severities:
         active_chips.append(f"Severity: {', '.join(filter_state.severities)}")
 
-    chip_html = "".join([f'<span class="filter-chip">🏷️ {chip}</span>' for chip in active_chips])
-    status_text = f"Showing <b>{total_matched:,}</b> of <b>{total_full:,}</b> incidents ({total_matched/total_full*100:.1f}%)"
+    chip_html = "".join([f'<span class="filter-chip">▪ {chip}</span>' for chip in active_chips])
+    status_text = f"ACTIVE FILTER COHORT: <b>{total_matched:,}</b> / <b>{total_full:,}</b> incidents ({total_matched/total_full*100:.1f}%)"
 
     st.markdown(
         f"""
         <div class="filter-chip-bar">
-            <span style="font-size: 0.8rem; font-weight: 600; color: #CBD5E1; margin-right: 0.5rem;">{status_text}</span>
-            {chip_html if chip_html else '<span style="font-size: 0.75rem; color: #64748B;">No filters active (Full 1000 incident dataset)</span>'}
+            <span style="font-size: 0.74rem; font-weight: 600; color: #9299A5; margin-right: 0.5rem; font-family: 'IBM Plex Mono', monospace;">
+                {status_text}
+            </span>
+            {chip_html if chip_html else '<span style="font-size: 0.72rem; color: #626A76; font-family: \'IBM Plex Mono\', monospace;">Baseline State (Full 1,000 incident dataset)</span>'}
         </div>
         """,
         unsafe_allow_html=True
